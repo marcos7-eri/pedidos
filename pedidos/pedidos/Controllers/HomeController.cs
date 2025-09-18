@@ -1,23 +1,40 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using pedidos.Data;
 using pedidos.Models;
 
 namespace pedidos.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly ApplicationDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ApplicationDbContext context)
         {
-            _logger = logger;
+            _context = context;
         }
 
         public IActionResult Index()
         {
-            return View();
+            // Obtener estadísticas para el dashboard
+            var totalPedidos = _context.Orders.Count();
+            var totalProductos = _context.Products.Count();
+            var totalUsuarios = _context.Users.Count();
+            var pedidosPendientes = _context.Orders.Count(o => o.Estado == EstadoPedido.Pendiente);
+
+            var viewModel = new DashboardViewModel
+            {
+                TotalPedidos = totalPedidos,
+                TotalProductos = totalProductos,
+                TotalUsuarios = totalUsuarios,
+                PedidosPendientes = pedidosPendientes
+            };
+
+            return View(viewModel);
         }
 
+        [Authorize]
         public IActionResult Privacy()
         {
             return View();
@@ -26,7 +43,15 @@ namespace pedidos.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            return View(new ErrorViewModel { RequestId = System.Diagnostics.Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+    }
+
+    public class DashboardViewModel
+    {
+        public int TotalPedidos { get; set; }
+        public int TotalProductos { get; set; }
+        public int TotalUsuarios { get; set; }
+        public int PedidosPendientes { get; set; }
     }
 }

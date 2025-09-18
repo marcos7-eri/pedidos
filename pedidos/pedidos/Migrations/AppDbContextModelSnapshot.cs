@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using pedidoweb3.Data;
+using pedidos.Data;
 
 #nullable disable
 
-namespace pedidoweb3.Migrations
+namespace pedidos.Migrations
 {
-    [DbContext(typeof(AppDbContext))]
+    [DbContext(typeof(ApplicationDbContext))]
     partial class AppDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
@@ -22,7 +22,7 @@ namespace pedidoweb3.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("pedidoweb3.Models.Order", b =>
+            modelBuilder.Entity("pedidos.Models.Order", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -52,7 +52,7 @@ namespace pedidoweb3.Migrations
                     b.ToTable("Orders");
                 });
 
-            modelBuilder.Entity("pedidoweb3.Models.OrderItem", b =>
+            modelBuilder.Entity("pedidos.Models.OrderItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -82,7 +82,7 @@ namespace pedidoweb3.Migrations
                     b.ToTable("OrderItems");
                 });
 
-            modelBuilder.Entity("pedidoweb3.Models.Product", b =>
+            modelBuilder.Entity("pedidos.Models.Product", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -115,7 +115,7 @@ namespace pedidoweb3.Migrations
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("pedidoweb3.Models.User", b =>
+            modelBuilder.Entity("pedidos.Models.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -150,9 +150,9 @@ namespace pedidoweb3.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("pedidoweb3.Models.Order", b =>
+            modelBuilder.Entity("pedidos.Models.Order", b =>
                 {
-                    b.HasOne("pedidoweb3.Models.User", "Cliente")
+                    b.HasOne("pedidos.Models.User", "Cliente")
                         .WithMany("Orders")
                         .HasForeignKey("ClienteId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -161,15 +161,15 @@ namespace pedidoweb3.Migrations
                     b.Navigation("Cliente");
                 });
 
-            modelBuilder.Entity("pedidoweb3.Models.OrderItem", b =>
+            modelBuilder.Entity("pedidos.Models.OrderItem", b =>
                 {
-                    b.HasOne("pedidoweb3.Models.Order", "Order")
+                    b.HasOne("pedidos.Models.Order", "Order")
                         .WithMany("Items")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("pedidoweb3.Models.Product", "Product")
+                    b.HasOne("pedidos.Models.Product", "Product")
                         .WithMany("OrderItems")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -180,17 +180,17 @@ namespace pedidoweb3.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("pedidoweb3.Models.Order", b =>
+            modelBuilder.Entity("pedidos.Models.Order", b =>
                 {
                     b.Navigation("Items");
                 });
 
-            modelBuilder.Entity("pedidoweb3.Models.Product", b =>
+            modelBuilder.Entity("pedidos.Models.Product", b =>
                 {
                     b.Navigation("OrderItems");
                 });
 
-            modelBuilder.Entity("pedidoweb3.Models.User", b =>
+            modelBuilder.Entity("pedidos.Models.User", b =>
                 {
                     b.Navigation("Orders");
                 });
