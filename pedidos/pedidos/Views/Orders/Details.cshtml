@@ -1,12 +1,12 @@
-﻿@model pedidoweb3.Models.Order
+﻿@model pedidos.Models.Order
 @{
     ViewData["Title"] = "Detalles del pedido";
 }
 
 <h1>@ViewData["Title"] #@Model.Id</h1>
 
-<p><strong>Cliente:</strong> @Model.Cliente?.Nombre (@Model.Cliente?.Email)</p>
-<p><strong>Fecha:</strong> @Model.Fecha.ToLocalTime()</p>
+<p><strong>Cliente:</strong> @Model.User?.Nombre (@Model.User?.Email)</p>
+<p><strong>Fecha:</strong> @Model.FechaPedido.ToLocalTime()</p>
 <p><strong>Estado:</strong> <span class="badge bg-secondary">@Model.Estado</span></p>
 
 <table class="table">
@@ -19,7 +19,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var it in Model.Items)
+        @foreach (var it in Model.OrderItems)
         {
             <tr>
                 <td>@it.Product?.Nombre</td>

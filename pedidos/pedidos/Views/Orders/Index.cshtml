@@ -1,4 +1,4 @@
-﻿@model IEnumerable<pedidoweb3.Models.Order>
+﻿@model IEnumerable<pedidos.Models.Order>
 @{
     ViewData["Title"] = "Pedidos";
 }
@@ -23,8 +23,8 @@
         {
             <tr>
                 <td>@o.Id</td>
-                <td>@o.Cliente?.Nombre</td>
-                <td>@o.Fecha.ToLocalTime()</td>
+                <td>@o.User?.Nombre</td>
+                <td>@o.FechaPedido.ToLocalTime()</td>
                 <td><span class="badge bg-secondary">@o.Estado</span></td>
                 <td class="text-end">@o.Total.ToString("C")</td>
                 <td class="text-end">

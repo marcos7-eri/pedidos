@@ -1,4 +1,4 @@
-﻿@model pedidoweb3.Models.Order
+﻿@model pedidos.Models.Order
 @{
     ViewData["Title"] = "Eliminar pedido";
 }
@@ -6,8 +6,8 @@
 <h1 class="text-danger">@ViewData["Title"] #@Model.Id</h1>
 <p>Al eliminar este pedido, el stock se devolverá a los productos.</p>
 
-<p><strong>Cliente:</strong> @Model.Cliente?.Nombre</p>
-<p><strong>Fecha:</strong> @Model.Fecha.ToLocalTime()</p>
+<p><strong>Cliente:</strong> @Model.User?.Nombre</p>
+<p><strong>Fecha:</strong> @Model.FechaPedido.ToLocalTime()</p>
 <p><strong>Total:</strong> @Model.Total.ToString("C")</p>
 
 <form asp-action="Delete" method="post">
