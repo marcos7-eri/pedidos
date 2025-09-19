@@ -47,4 +47,25 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+//inicial (admin + productos demo opcional)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+
+    if (!db.Users.Any())
+    {
+        var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
+        var admin = new User { Nombre = "Admin", Email = "admin@pedidos.local", Rol = "admin" };
+        admin.PasswordHash = hasher.HashPassword(admin, "Admin123!");
+        db.Users.Add(admin);
+
+        db.Products.AddRange(
+            new Product { Nombre = "Cafe", Categoria = "Bebidas", Precio = 30m, Stock = 50 },
+            new Product { Nombre = "Azúcar", Categoria = "Abarrotes", Precio = 15m, Stock = 200 }
+        );
+        db.SaveChanges();
+    }
+}
+
 app.Run();
