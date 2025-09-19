@@ -1,38 +1,59 @@
 ﻿@model IEnumerable<pedidos.Models.Order>
+
 @{
-    ViewData["Title"] = "Pedidos";
+    ViewData["Title"] = "Index";
 }
 
-<h1 class="mb-3">Pedidos</h1>
+<h1>Index</h1>
 
-<p><a class="btn btn-primary" asp-action="Create">Crear pedido</a></p>
-
-<table class="table table-striped">
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
     <thead>
         <tr>
-            <th>ID</th>
-            <th>Cliente</th>
-            <th>Fecha</th>
-            <th>Estado</th>
-            <th class="text-end">Total</th>
+            <th>
+                @Html.DisplayNameFor(model => model.User)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.FechaPedido)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Total)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Estado)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Notas)
+            </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var o in Model)
-        {
-            <tr>
-                <td>@o.Id</td>
-                <td>@o.User?.Nombre</td>
-                <td>@o.FechaPedido.ToLocalTime()</td>
-                <td><span class="badge bg-secondary">@o.Estado</span></td>
-                <td class="text-end">@o.Total.ToString("C")</td>
-                <td class="text-end">
-                    <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@o.Id">Detalles</a>
-                    <a class="btn btn-sm btn-warning" asp-action="Edit" asp-route-id="@o.Id">Editar</a>
-                    <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@o.Id">Eliminar</a>
-                </td>
-            </tr>
-        }
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.User.Email)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FechaPedido)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Total)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Estado)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Notas)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+            </td>
+        </tr>
+}
     </tbody>
 </table>

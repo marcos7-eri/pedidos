@@ -1,8 +1,10 @@
-﻿using System.Security.Claims;
+﻿using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using pedidos.Data;
@@ -10,137 +12,61 @@ using pedidos.Models;
 
 namespace PedidosMVC.Controllers
 {
-    [AllowAnonymous]
     public class AccountController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _db;
+        private readonly IPasswordHasher<User> _hasher;
 
-        public AccountController(ApplicationDbContext context)
+        public AccountController(ApplicationDbContext db, IPasswordHasher<User> hasher)
         {
-            _context = context;
+            _db = db;
+            _hasher = hasher;
         }
 
-        // GET: Account/Login
+        // GET
+        [HttpGet]
         public IActionResult Login(string? returnUrl = null)
         {
-            ViewData["ReturnUrl"] = returnUrl;
+            ViewBag.ReturnUrl = returnUrl;
             return View();
         }
 
-        // POST: Account/Login
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
+        // POST
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(string email, string password, string? returnUrl = null)
         {
-            ViewData["ReturnUrl"] = returnUrl;
-
-            if (ModelState.IsValid)
+            var u = await _db.Users.FirstOrDefaultAsync(x => x.Email == email);
+            if (u == null || _hasher.VerifyHashedPassword(u, u.PasswordHash, password) == PasswordVerificationResult.Failed)
             {
-                var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Email == model.Email && u.Activo);
-
-                if (user != null && user.Password == model.Password) // validación directa sin encriptar
-                {
-                    var claims = new List<Claim>
-                    {
-                        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                        new Claim(ClaimTypes.Name, user.Nombre),
-                        new Claim(ClaimTypes.Email, user.Email),
-                        new Claim(ClaimTypes.Role, user.Rol)
-                    };
-
-                    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                    var authProperties = new AuthenticationProperties
-                    {
-                        IsPersistent = model.RememberMe
-                    };
-
-                    await HttpContext.SignInAsync(
-                        CookieAuthenticationDefaults.AuthenticationScheme,
-                        new ClaimsPrincipal(claimsIdentity),
-                        authProperties);
-
-                    if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                    {
-                        return Redirect(returnUrl);
-                    }
-                    else
-                    {
-                        return RedirectToAction("Index", "Home");
-                    }
-                }
-                else
-                {
-                    ModelState.AddModelError("", "Email o contraseña incorrectos.");
-                }
+                ViewBag.Error = "Credenciales invalidas";
+                return View();
             }
 
-            return View(model);
-        }
-
-        // GET: Account/Register
-        public IActionResult Register()
-        {
-            return View();
-        }
-
-        // POST: Account/Register
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterViewModel model)
-        {
-            if (ModelState.IsValid)
+            var claims = new List<Claim>
             {
-                if (await _context.Users.AnyAsync(u => u.Email == model.Email))
-                {
-                    ModelState.AddModelError("Email", "El email ya está registrado.");
-                    return View(model);
-                }
+                new Claim(ClaimTypes.Name, u.Nombre),
+                new Claim(ClaimTypes.NameIdentifier, u.Id.ToString()),
+                new Claim("email", u.Email),
+                new Claim("rol", u.Rol),
+                new Claim(ClaimTypes.Role, u.Rol)
+            };
 
-                var user = new User
-                {
-                    Nombre = model.Nombre,
-                    Email = model.Email,
-                    Password = model.Password, // se guarda tal cual
-                    Rol = "Cliente",
-                    Activo = true,
-                    FechaRegistro = DateTime.Now
-                };
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
 
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
-
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Name, user.Nombre),
-                    new Claim(ClaimTypes.Email, user.Email),
-                    new Claim(ClaimTypes.Role, user.Rol)
-                };
-
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                await HttpContext.SignInAsync(
-                    CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(claimsIdentity));
-
-                return RedirectToAction("Index", "Home");
-            }
-
-            return View(model);
+            return !string.IsNullOrEmpty(returnUrl)
+                ? Redirect(returnUrl)
+                : RedirectToAction("Index", "Home");
         }
 
-        // POST: Account/Logout
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        // GET
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignOutAsync();
             return RedirectToAction("Index", "Home");
         }
 
-        public IActionResult AccessDenied()
-        {
-            return View();
-        }
+        // GET
+        public IActionResult AccessDenied() => Content("Acceso denegado.");
     }
 }

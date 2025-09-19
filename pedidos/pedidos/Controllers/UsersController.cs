@@ -1,14 +1,15 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using pedidos.Data;
 using pedidos.Models;
 
-namespace PedidosMVC.Controllers
+namespace pedidos.Controllers
 {
-    [Authorize(Roles = "Admin")]
     public class UsersController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -49,13 +50,14 @@ namespace PedidosMVC.Controllers
         }
 
         // POST: Users/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Nombre,Email,Password,Rol,Activo")] User user)
+        public async Task<IActionResult> Create([Bind("Id,Nombre,Email,PasswordHash,Rol")] User user)
         {
             if (ModelState.IsValid)
             {
-                // Guardar la contraseña tal cual, sin encriptar
                 _context.Add(user);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -80,9 +82,11 @@ namespace PedidosMVC.Controllers
         }
 
         // POST: Users/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Email,Password,Rol,Activo")] User user)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Email,PasswordHash,Rol")] User user)
         {
             if (id != user.Id)
             {
@@ -136,7 +140,11 @@ namespace PedidosMVC.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var user = await _context.Users.FindAsync(id);
-            _context.Users.Remove(user);
+            if (user != null)
+            {
+                _context.Users.Remove(user);
+            }
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }

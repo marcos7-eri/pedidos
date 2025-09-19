@@ -1,39 +1,52 @@
-﻿@{
-    ViewData["Title"] = "Crear pedido";
-    var clientes = (IEnumerable<pedidos.Models.User>)ViewBag.Clientes;
-    var productos = (IEnumerable<pedidos.Models.Product>)ViewBag.Productos;
+﻿@model pedidos.Models.Order
+
+@{
+    ViewData["Title"] = "Create";
 }
 
-<h1>@ViewData["Title"]</h1>
+<h1>Create</h1>
 
-<form asp-action="Create" method="post">
-    <div class="mb-3">
-        <label class="form-label">Cliente</label>
-        <select name="clienteId" class="form-select" required>
-            <option value="">-- Seleccione --</option>
-            @foreach (var c in clientes)
-            {
-                <option value="@c.Id">@c.Nombre (@c.Email)</option>
-            }
-        </select>
+<h4>Order</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="UserId" class="control-label"></label>
+                <select asp-for="UserId" class ="form-control" asp-items="ViewBag.UserId"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="FechaPedido" class="control-label"></label>
+                <input asp-for="FechaPedido" class="form-control" />
+                <span asp-validation-for="FechaPedido" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Total" class="control-label"></label>
+                <input asp-for="Total" class="form-control" />
+                <span asp-validation-for="Total" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Estado" class="control-label"></label>
+                <select asp-for="Estado" class="form-control"></select>
+                <span asp-validation-for="Estado" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Notas" class="control-label"></label>
+                <input asp-for="Notas" class="form-control" />
+                <span asp-validation-for="Notas" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
     </div>
+</div>
 
-    <div class="mb-3">
-        <label class="form-label">Producto</label>
-        <select name="productId" class="form-select" required>
-            <option value="">-- Seleccione --</option>
-            @foreach (var p in productos)
-            {
-                <option value="@p.Id">@p.Nombre (Stock: @p.Stock) - @p.Precio.ToString("C")</option>
-            }
-        </select>
-    </div>
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
 
-    <div class="mb-3">
-        <label class="form-label">Cantidad</label>
-        <input type="number" name="cantidad" class="form-control" min="1" required />
-    </div>
-
-    <button type="submit" class="btn btn-success">Guardar</button>
-    <a asp-action="Index" class="btn btn-secondary">Volver</a>
-</form>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

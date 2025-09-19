@@ -4,30 +4,23 @@ namespace pedidos.Models
 {
     public class User
     {
-        [Key]
-        public int Id { get; set; }
+        public int Id { get; set; } //id
 
-        [Required(ErrorMessage = "El nombre es obligatorio")]
-        [StringLength(100, ErrorMessage = "El nombre no puede exceder 100 caracteres")]
-        public string Nombre { get; set; }
+        [Required, StringLength(120)]
+        public string Nombre { get; set; } = string.Empty; //string para nombre
 
-        [Required(ErrorMessage = "El email es obligatorio")]
-        [EmailAddress(ErrorMessage = "El formato del email no es válido")]
-        public string Email { get; set; }
+        [Required, EmailAddress, StringLength(150)]
+        public string Email { get; set; } = string.Empty; //string para el email pq es formato texto
 
-        [Required(ErrorMessage = "La contraseña es obligatoria")]
-        [DataType(DataType.Password)]
-        [MinLength(6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres")]
-        public string Password { get; set; }
+        //guardaremos hash (no en texto plano)
+        [Required]
+        public string PasswordHash { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "El rol es obligatorio")]
-        public string Rol { get; set; } = "Cliente"; // Valores: Admin, Empleado, Cliente
+        // admin | cliente | empleado
+        [Required, StringLength(20)]
+        public string Rol { get; set; } = "cliente";
 
-        public DateTime FechaRegistro { get; set; } = DateTime.Now;
 
-        public bool Activo { get; set; } = true;
-
-        // Relaciones
-        public virtual ICollection<Order> Orders { get; set; }
+        public ICollection<Order>? Orders { get; set; }
     }
 }

@@ -1,14 +1,15 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using pedidos.Data;
 using pedidos.Models;
 
-namespace PedidosMVC.Controllers
+namespace pedidos.Controllers
 {
-    [Authorize(Roles = "Admin,Empleado")]
     public class ProductsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -18,46 +19,13 @@ namespace PedidosMVC.Controllers
             _context = context;
         }
 
-        // GET: Products
-        [AllowAnonymous]
-        public async Task<IActionResult> Index(string searchString, string categoria, decimal? precioMin, decimal? precioMax)
+        // GET: Products1
+        public async Task<IActionResult> Index()
         {
-            var products = from p in _context.Products
-                           where p.Activo
-                           select p;
-
-            if (!string.IsNullOrEmpty(searchString))
-            {
-                products = products.Where(p => p.Nombre.Contains(searchString) || p.Descripcion.Contains(searchString));
-            }
-
-            if (!string.IsNullOrEmpty(categoria))
-            {
-                products = products.Where(p => p.Categoria == categoria);
-            }
-
-            if (precioMin.HasValue)
-            {
-                products = products.Where(p => p.Precio >= precioMin.Value);
-            }
-
-            if (precioMax.HasValue)
-            {
-                products = products.Where(p => p.Precio <= precioMax.Value);
-            }
-
-            // Obtener categorías para el dropdown
-            ViewBag.Categorias = await _context.Products
-                .Where(p => p.Categoria != null)
-                .Select(p => p.Categoria)
-                .Distinct()
-                .ToListAsync();
-
-            return View(await products.ToListAsync());
+            return View(await _context.Products.ToListAsync());
         }
 
-        // GET: Products/Details/5
-        [AllowAnonymous]
+        // GET: Products1/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -66,7 +34,7 @@ namespace PedidosMVC.Controllers
             }
 
             var product = await _context.Products
-                .FirstOrDefaultAsync(m => m.Id == id && m.Activo);
+                .FirstOrDefaultAsync(m => m.Id == id);
             if (product == null)
             {
                 return NotFound();
@@ -75,22 +43,21 @@ namespace PedidosMVC.Controllers
             return View(product);
         }
 
-        // GET: Products/Create
+        // GET: Products1/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Products/Create
+        // POST: Products1/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Nombre,Descripcion,Precio,Stock,Categoria")] Product product)
+        public async Task<IActionResult> Create([Bind("Id,Nombre,Descripcion,Precio,Stock,Categoria,FechaCreacion,Activo")] Product product)
         {
             if (ModelState.IsValid)
             {
-                product.Activo = true;
-                product.FechaCreacion = DateTime.Now;
-
                 _context.Add(product);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -98,7 +65,7 @@ namespace PedidosMVC.Controllers
             return View(product);
         }
 
-        // GET: Products/Edit/5
+        // GET: Products1/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -107,17 +74,19 @@ namespace PedidosMVC.Controllers
             }
 
             var product = await _context.Products.FindAsync(id);
-            if (product == null || !product.Activo)
+            if (product == null)
             {
                 return NotFound();
             }
             return View(product);
         }
 
-        // POST: Products/Edit/5
+        // POST: Products1/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Descripcion,Precio,Stock,Categoria,Activo")] Product product)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Nombre,Descripcion,Precio,Stock,Categoria,FechaCreacion,Activo")] Product product)
         {
             if (id != product.Id)
             {
@@ -147,7 +116,7 @@ namespace PedidosMVC.Controllers
             return View(product);
         }
 
-        // GET: Products/Delete/5
+        // GET: Products1/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -156,7 +125,7 @@ namespace PedidosMVC.Controllers
             }
 
             var product = await _context.Products
-                .FirstOrDefaultAsync(m => m.Id == id && m.Activo);
+                .FirstOrDefaultAsync(m => m.Id == id);
             if (product == null)
             {
                 return NotFound();
@@ -165,22 +134,24 @@ namespace PedidosMVC.Controllers
             return View(product);
         }
 
-        // POST: Products/Delete/5
+        // POST: Products1/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var product = await _context.Products.FindAsync(id);
-            // Eliminación lógica
-            product.Activo = false;
-            _context.Products.Update(product);
+            if (product != null)
+            {
+                _context.Products.Remove(product);
+            }
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool ProductExists(int id)
         {
-            return _context.Products.Any(e => e.Id == id && e.Activo);
+            return _context.Products.Any(e => e.Id == id);
         }
     }
 }

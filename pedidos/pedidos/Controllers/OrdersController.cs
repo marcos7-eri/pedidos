@@ -1,15 +1,15 @@
-﻿using System.Linq;
-using System.Security.Claims;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using pedidos.Data;
 using pedidos.Models;
 
-namespace PedidosMVC.Controllers
+namespace pedidos.Controllers
 {
-    [Authorize]
     public class OrdersController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -22,22 +22,8 @@ namespace PedidosMVC.Controllers
         // GET: Orders
         public async Task<IActionResult> Index()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var isAdmin = User.IsInRole("Admin");
-            var isEmpleado = User.IsInRole("Empleado");
-
-            IQueryable<Order> orders;
-
-            if (isAdmin || isEmpleado)
-            {
-                orders = _context.Orders.Include(o => o.User);
-            }
-            else
-            {
-                orders = _context.Orders.Where(o => o.UserId == int.Parse(userId));
-            }
-
-            return View(await orders.Include(o => o.OrderItems).ThenInclude(oi => oi.Product).ToListAsync());
+            var applicationDbContext = _context.Orders.Include(o => o.User);
+            return View(await applicationDbContext.ToListAsync());
         }
 
         // GET: Orders/Details/5
@@ -50,128 +36,123 @@ namespace PedidosMVC.Controllers
 
             var order = await _context.Orders
                 .Include(o => o.User)
-                .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.Product)
                 .FirstOrDefaultAsync(m => m.Id == id);
-
             if (order == null)
             {
                 return NotFound();
-            }
-
-            // Verificar que el usuario tenga acceso a este pedido
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!User.IsInRole("Admin") && !User.IsInRole("Empleado") && order.UserId != int.Parse(userId))
-            {
-                return Forbid();
             }
 
             return View(order);
         }
 
         // GET: Orders/Create
-        public async Task<IActionResult> Create()
+        public IActionResult Create()
         {
-            // Cargar productos para seleccionar
-            ViewBag.Products = await _context.Products.Where(p => p.Activo && p.Stock > 0).ToListAsync();
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Email");
             return View();
         }
 
         // POST: Orders/Create
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("OrderItems,Notas")] OrderCreateViewModel viewModel)
+        public async Task<IActionResult> Create([Bind("Id,UserId,FechaPedido,Total,Estado,Notas")] Order order)
         {
-            if (ModelState.IsValid && viewModel.OrderItems.Any(oi => oi.Cantidad > 0))
+            if (ModelState.IsValid)
             {
-                using var transaction = await _context.Database.BeginTransactionAsync();
-
-                try
-                {
-                    var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-                    var order = new Order
-                    {
-                        UserId = userId,
-                        FechaPedido = DateTime.Now,
-                        Estado = EstadoPedido.Pendiente,
-                        Notas = viewModel.Notas
-                    };
-
-                    // Calcular total y validar stock
-                    decimal total = 0;
-                    foreach (var item in viewModel.OrderItems.Where(oi => oi.Cantidad > 0))
-                    {
-                        var product = await _context.Products.FindAsync(item.ProductId);
-                        if (product == null || !product.Activo)
-                        {
-                            ModelState.AddModelError("", $"El producto con ID {item.ProductId} no existe.");
-                            await transaction.RollbackAsync();
-                            ViewBag.Products = await _context.Products.Where(p => p.Activo && p.Stock > 0).ToListAsync();
-                            return View(viewModel);
-                        }
-
-                        if (product.Stock < item.Cantidad)
-                        {
-                            ModelState.AddModelError("", $"Stock insuficiente para {product.Nombre}. Stock disponible: {product.Stock}");
-                            await transaction.RollbackAsync();
-                            ViewBag.Products = await _context.Products.Where(p => p.Activo && p.Stock > 0).ToListAsync();
-                            return View(viewModel);
-                        }
-
-                        var subtotal = product.Precio * item.Cantidad;
-                        total += subtotal;
-
-                        order.OrderItems.Add(new OrderItem
-                        {
-                            ProductId = item.ProductId,
-                            Cantidad = item.Cantidad,
-                            PrecioUnitario = product.Precio,
-                            Subtotal = subtotal
-                        });
-
-                        // Reducir stock
-                        product.Stock -= item.Cantidad;
-                        _context.Products.Update(product);
-                    }
-
-                    order.Total = total;
-                    _context.Orders.Add(order);
-                    await _context.SaveChangesAsync();
-                    await transaction.CommitAsync();
-
-                    return RedirectToAction(nameof(Details), new { id = order.Id });
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync();
-                    ModelState.AddModelError("", "Error al crear el pedido: " + ex.Message);
-                }
+                _context.Add(order);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
             }
-            else if (!viewModel.OrderItems.Any(oi => oi.Cantidad > 0))
-            {
-                ModelState.AddModelError("", "Debe seleccionar al menos un producto con cantidad mayor a 0.");
-            }
-
-            ViewBag.Products = await _context.Products.Where(p => p.Activo && p.Stock > 0).ToListAsync();
-            return View(viewModel);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Email", order.UserId);
+            return View(order);
         }
 
-        // POST: Orders/UpdateStatus/5
-        [HttpPost]
-        [Authorize(Roles = "Admin,Empleado")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateStatus(int id, EstadoPedido nuevoEstado)
+        // GET: Orders/Edit/5
+        public async Task<IActionResult> Edit(int? id)
         {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
             var order = await _context.Orders.FindAsync(id);
             if (order == null)
             {
                 return NotFound();
             }
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Email", order.UserId);
+            return View(order);
+        }
 
-            order.Estado = nuevoEstado;
-            _context.Orders.Update(order);
+        // POST: Orders/Edit/5
+        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,FechaPedido,Total,Estado,Notas")] Order order)
+        {
+            if (id != order.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(order);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!OrderExists(order.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Email", order.UserId);
+            return View(order);
+        }
+
+        // GET: Orders/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var order = await _context.Orders
+                .Include(o => o.User)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            return View(order);
+        }
+
+        // POST: Orders/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var order = await _context.Orders.FindAsync(id);
+            if (order != null)
+            {
+                _context.Orders.Remove(order);
+            }
+
             await _context.SaveChangesAsync();
-
             return RedirectToAction(nameof(Index));
         }
 
@@ -179,17 +160,5 @@ namespace PedidosMVC.Controllers
         {
             return _context.Orders.Any(e => e.Id == id);
         }
-    }
-
-    public class OrderCreateViewModel
-    {
-        public List<OrderItemViewModel> OrderItems { get; set; } = new List<OrderItemViewModel>();
-        public string Notas { get; set; }
-    }
-
-    public class OrderItemViewModel
-    {
-        public int ProductId { get; set; }
-        public int Cantidad { get; set; }
     }
 }

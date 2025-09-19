@@ -1,23 +1,54 @@
 ﻿@model pedidos.Models.Order
+
 @{
-    ViewData["Title"] = "Editar pedido";
+    ViewData["Title"] = "Edit";
 }
 
-<h1>@ViewData["Title"] #@Model.Id</h1>
+<h1>Edit</h1>
 
-<form asp-action="Edit" method="post">
-    <input type="hidden" name="id" value="@Model.Id" />
-
-    <div class="mb-3">
-        <label class="form-label">Estado</label>
-        <select name="estado" class="form-select">
-            @foreach (var e in Enum.GetValues(typeof(pedidos.Models.EstadoPedido)))
-            {
-                <option value="@e" selected="@(Model.Estado.ToString() == e.ToString())">@e</option>
-            }
-        </select>
+<h4>Order</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <div class="form-group">
+                <label asp-for="UserId" class="control-label"></label>
+                <select asp-for="UserId" class="form-control" asp-items="ViewBag.UserId"></select>
+                <span asp-validation-for="UserId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FechaPedido" class="control-label"></label>
+                <input asp-for="FechaPedido" class="form-control" />
+                <span asp-validation-for="FechaPedido" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Total" class="control-label"></label>
+                <input asp-for="Total" class="form-control" />
+                <span asp-validation-for="Total" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Estado" class="control-label"></label>
+                <select asp-for="Estado" class="form-control"></select>
+                <span asp-validation-for="Estado" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Notas" class="control-label"></label>
+                <input asp-for="Notas" class="form-control" />
+                <span asp-validation-for="Notas" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
     </div>
+</div>
 
-    <button type="submit" class="btn btn-primary">Guardar</button>
-    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">Cancelar</a>
-</form>
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
