@@ -64,7 +64,6 @@ using (var scope = app.Services.CreateScope())
             new Product { Nombre = "Cafe", Categoria = "Bebidas", Precio = 30m, Stock = 50 },
             new Product { Nombre = "Azúcar", Categoria = "Abarrotes", Precio = 15m, Stock = 200 }
         );
-        db.SaveChanges();
     }
 }
 
