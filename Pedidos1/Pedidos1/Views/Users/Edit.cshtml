@@ -1,0 +1,45 @@
+﻿@model Pedidos1.Models.User
+@{
+    ViewData["Title"] = "Editar Usuario";
+}
+<h2>Editar Usuario</h2>
+
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Nueva contraseña (opcional)</label>
+        <input name="newPassword" type="password" class="form-control" />
+        <small class="text-muted">Déjala vacía para mantener la actual.</small>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Role" class="form-label"></label>
+        <select asp-for="Role" class="form-select">
+            <option value="cliente" selected="@(Model.Role == "cliente")">cliente</option>
+            <option value="empleado" selected="@(Model.Role == "empleado")">empleado</option>
+            <option value="admin" selected="@(Model.Role == "admin")">admin</option>
+        </select>
+        <span asp-validation-for="Role" class="text-danger"></span>
+    </div>
+
+    <button class="btn btn-primary">Guardar</button>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Volver</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

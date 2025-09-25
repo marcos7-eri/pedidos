@@ -1,0 +1,23 @@
+﻿@model IEnumerable<Pedidos1.Models.Order>
+@using Pedidos1.Models
+@{
+    ViewData["Title"] = "Pedidos";
+}
+<h2>Pedidos</h2>
+<a class="btn btn-primary mb-2" asp-action="Create">Crear pedido</a>
+<table class="table table-hover">
+    <thead><tr><th>#</th><th>Cliente</th><th>Fecha</th><th>Estado</th><th>Total</th><th></th></tr></thead>
+    <tbody>
+        @foreach (var o in Model)
+        {
+            <tr>
+                <td>@o.Id</td>
+                <td>@o.Customer?.Name</td>
+                <td>@o.CreatedAt.ToLocalTime()</td>
+                <td>@o.Status</td>
+                <td>@o.Total.ToString("0.00")</td>
+                <td><a asp-action="Details" asp-route-id="@o.Id">Ver</a></td>
+            </tr>
+        }
+    </tbody>
+</table>

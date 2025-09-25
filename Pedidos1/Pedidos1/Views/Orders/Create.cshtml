@@ -1,0 +1,23 @@
+﻿@{
+    ViewData["Title"] = "Nuevo Pedido";
+    var products = (IEnumerable<Pedidos1.Models.Product>)ViewBag.Products;
+}
+<h2>Nuevo Pedido</h2>
+<form method="post">
+    @Html.AntiForgeryToken()
+    <div class="mb-3">
+        <label class="form-label">Producto</label>
+        <select class="form-select" name="productId" required>
+            <option value="">-- Seleccione --</option>
+            @foreach (var p in products)
+            {
+                <option value="@p.Id">@p.Name (@p.Stock en stock) - @p.Price.ToString("0.00")</option>
+            }
+        </select>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Cantidad</label>
+        <input type="number" name="quantity" min="1" class="form-control" required />
+    </div>
+    <button class="btn btn-primary">Crear pedido</button>
+</form>

@@ -1,0 +1,80 @@
+﻿@model IEnumerable<Pedidos1.Models.Product>
+
+@{
+    ViewData["Title"] = "Productos";
+
+    // Obtenemos el Request a través de ViewContext
+    var req = ViewContext.HttpContext.Request;
+
+    string qSearch = req.Query["searchString"].ToString();
+    string qCategory = req.Query["categoryFilter"].ToString();
+    string qMinPrice = req.Query["minPrice"].ToString();
+    string qMaxPrice = req.Query["maxPrice"].ToString();
+}
+
+<h2 class="mb-3">Productos</h2>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-3">
+        <input name="searchString" class="form-control" placeholder="Buscar..."
+               value="@qSearch" />
+    </div>
+    <div class="col-md-3">
+        <input name="categoryFilter" class="form-control" placeholder="Categoría"
+               value="@qCategory" />
+    </div>
+    <div class="col-md-2">
+        <input name="minPrice" type="number" step="0.01" class="form-control" placeholder="Precio mín."
+               value="@qMinPrice" />
+    </div>
+    <div class="col-md-2">
+        <input name="maxPrice" type="number" step="0.01" class="form-control" placeholder="Precio máx."
+               value="@qMaxPrice" />
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-outline-primary w-100">Filtrar</button>
+    </div>
+</form>
+
+@if (User.IsInRole("admin") || User.IsInRole("empleado"))
+{
+    <a class="btn btn-primary mb-2" asp-action="Create">Nuevo</a>
+}
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Categoría</th>
+            <th class="text-end">Precio</th>
+            <th class="text-end">Stock</th>
+            <th style="width:160px"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model is null || !Model.Any())
+        {
+            <tr><td colspan="5" class="text-center text-muted">Sin resultados</td></tr>
+        }
+        else
+        {
+            foreach (var p in Model)
+            {
+                <tr>
+                    <td>@p.Name</td>
+                    <td>@p.Category</td>
+                    <td class="text-end">@p.Price.ToString("0.00")</td>
+                    <td class="text-end">@p.Stock</td>
+                    <td>
+                        <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@p.Id">Ver</a>
+                        @if (User.IsInRole("admin") || User.IsInRole("empleado"))
+                        {
+                            <a class="btn btn-sm btn-outline-primary ms-1" asp-action="Edit" asp-route-id="@p.Id">Editar</a>
+                            <a class="btn btn-sm btn-outline-danger ms-1" asp-action="Delete" asp-route-id="@p.Id">Eliminar</a>
+                        }
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
