@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pedidos1.Data;
 using Pedidos1.Models;
@@ -8,13 +9,10 @@ namespace Pedidos1.Controllers
     public class ProductsController : Controller
     {
         private readonly ApplicationDbContext _db;
+        public ProductsController(ApplicationDbContext db) => _db = db;
 
-        public ProductsController(ApplicationDbContext db)
-        {
-            _db = db;
-        }
-
-        // LISTA
+        // VER LISTA/DETALLE: público
+        [AllowAnonymous]
         public async Task<IActionResult> Index(string? searchString, string? categoryFilter, decimal? minPrice, decimal? maxPrice)
         {
             var q = _db.Products.AsQueryable();
@@ -33,20 +31,7 @@ namespace Pedidos1.Controllers
             return View(items);
         }
 
-        // CREATE
-        public IActionResult Create() => View(new Product());
-
-        [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Product product)
-        {
-            if (!ModelState.IsValid) return View(product);
-            _db.Add(product);
-            await _db.SaveChangesAsync();
-            TempData["msg"] = "Producto creado.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        // DETAILS
+        [AllowAnonymous]
         public async Task<IActionResult> Details(int id)
         {
             var p = await _db.Products.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
@@ -54,7 +39,27 @@ namespace Pedidos1.Controllers
             return View(p);
         }
 
-        // EDIT
+        // CREAR/EDITAR/ELIMINAR: admin o empleado
+        [Authorize(Roles = "admin,empleado")]
+        public IActionResult Create() => View(new Product());
+
+        [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "admin,empleado")]
+        public async Task<IActionResult> Create(Product product)
+        {
+            if (!ModelState.IsValid) return View(product);
+
+            // Validación extra de servidor (por seguridad)
+            if (product.Price <= 0) ModelState.AddModelError(nameof(product.Price), "El precio debe ser positivo.");
+            if (product.Stock < 0) ModelState.AddModelError(nameof(product.Stock), "El stock no puede ser negativo.");
+            if (!ModelState.IsValid) return View(product);
+
+            _db.Add(product);
+            await _db.SaveChangesAsync();
+            TempData["msg"] = "Producto creado.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [Authorize(Roles = "admin,empleado")]
         public async Task<IActionResult> Edit(int id)
         {
             var p = await _db.Products.FindAsync(id);
@@ -62,10 +67,15 @@ namespace Pedidos1.Controllers
             return View(p);
         }
 
-        [HttpPost, ValidateAntiForgeryToken]
+        [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "admin,empleado")]
         public async Task<IActionResult> Edit(int id, Product input)
         {
             if (!ModelState.IsValid) return View(input);
+
+            if (input.Price <= 0) ModelState.AddModelError(nameof(input.Price), "El precio debe ser positivo.");
+            if (input.Stock < 0) ModelState.AddModelError(nameof(input.Stock), "El stock no puede ser negativo.");
+            if (!ModelState.IsValid) return View(input);
+
             var p = await _db.Products.FindAsync(id);
             if (p == null) return NotFound();
 
@@ -80,7 +90,7 @@ namespace Pedidos1.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // DELETE
+        [Authorize(Roles = "admin,empleado")]
         public async Task<IActionResult> Delete(int id)
         {
             var p = await _db.Products.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
@@ -88,7 +98,7 @@ namespace Pedidos1.Controllers
             return View(p);
         }
 
-        [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
+        [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken, Authorize(Roles = "admin,empleado")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var p = await _db.Products.FindAsync(id);

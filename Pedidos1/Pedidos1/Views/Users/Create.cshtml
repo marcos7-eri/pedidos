@@ -1,5 +1,4 @@
 ﻿@model Pedidos1.ViewModels.UserCreateViewModel
-
 @{
     ViewData["Title"] = "Nuevo Usuario";
 }
@@ -12,7 +11,6 @@
     <div class="card-body">
         <form asp-action="Create" method="post">
             @Html.AntiForgeryToken()
-
             <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
 
             <div class="row g-3">
@@ -31,7 +29,6 @@
                     <label asp-for="Password" class="form-label"></label>
                     <input asp-for="Password" class="form-control" />
                     <span asp-validation-for="Password" class="text-danger"></span>
-                    <div class="form-text">Mín. 6, con letras y números.</div>
                 </div>
                 <div class="col-md-6">
                     <label asp-for="ConfirmPassword" class="form-label"></label>
@@ -42,7 +39,7 @@
                 <div class="col-md-6">
                     <label asp-for="Role" class="form-label"></label>
                     <select asp-for="Role" class="form-select">
-                        <option value="cliente" selected>cliente</option>
+                        <option value="cliente">cliente</option>
                         <option value="empleado">empleado</option>
                         <option value="admin">admin</option>
                     </select>
@@ -57,7 +54,6 @@
         </form>
     </div>
 </div>
-
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }

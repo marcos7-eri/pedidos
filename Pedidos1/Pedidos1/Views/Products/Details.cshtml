@@ -5,9 +5,12 @@
 <div class="d-flex align-items-center mb-3">
     <h2 class="me-auto mb-0">Detalle de producto</h2>
     <div class="d-flex gap-2">
-        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">
-            <i class="bi bi-pencil me-1"></i> Editar
-        </a>
+        @if (User.IsInRole("admin") || User.IsInRole("empleado"))
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+                <i class="bi bi-pencil me-1"></i> Editar
+            </a>
+        }
         <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
     </div>
 </div>

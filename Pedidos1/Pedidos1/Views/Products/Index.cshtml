@@ -10,17 +10,18 @@
 
 <div class="d-flex align-items-center mb-3">
     <h2 class="me-auto mb-0">Productos</h2>
-    <a class="btn btn-primary" asp-action="Create">
-        <i class="bi bi-plus-circle me-1"></i> Nuevo
-    </a>
+    @if (User.IsInRole("admin") || User.IsInRole("empleado"))
+    {
+        <a class="btn btn-primary" asp-action="Create">
+            <i class="bi bi-plus-circle me-1"></i> Nuevo
+        </a>
+    }
 </div>
 
-<!-- FILTROS -->
 <div class="card mb-3 shadow-sm">
     <div class="card-header d-flex align-items-center">
         <i class="bi bi-funnel me-2"></i> Filtros
-        <button class="btn btn-sm btn-outline-secondary ms-auto" type="button"
-                data-bs-toggle="collapse" data-bs-target="#filtersBody">
+        <button class="btn btn-sm btn-outline-secondary ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#filtersBody">
             Mostrar / Ocultar
         </button>
     </div>
@@ -53,7 +54,6 @@
     </div>
 </div>
 
-<!-- LISTA DE PRODUCTOS -->
 <div class="card shadow-sm">
     <div class="card-body p-0">
         <table class="table table-hover mb-0">
@@ -84,12 +84,15 @@
                                 <a asp-action="Details" asp-route-id="@p.Id" class="btn btn-sm btn-outline-info me-1" title="Ver">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a asp-action="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-outline-primary me-1" title="Editar">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <a asp-action="Delete" asp-route-id="@p.Id" class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </a>
+                                @if (User.IsInRole("admin") || User.IsInRole("empleado"))
+                                {
+                                    <a asp-action="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-outline-primary me-1" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@p.Id" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                }
                             </td>
                         </tr>
                     }

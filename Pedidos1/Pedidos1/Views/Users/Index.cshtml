@@ -2,7 +2,6 @@
 @{
     ViewData["Title"] = "Usuarios";
 }
-
 <div class="d-flex align-items-center mb-3">
     <h2 class="me-auto mb-0">Usuarios</h2>
     <a class="btn btn-primary" asp-action="Create">
@@ -35,16 +34,13 @@
                             <td>@u.Email</td>
                             <td><span class="badge bg-secondary">@u.Role</span></td>
                             <td class="text-center">
-                                <a asp-action="Details" asp-route-id="@u.Id"
-                                   class="btn btn-sm btn-outline-info me-1" title="Ver">
+                                <a asp-action="Details" asp-route-id="@u.Id" class="btn btn-sm btn-outline-info me-1" title="Ver">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a asp-action="Edit" asp-route-id="@u.Id"
-                                   class="btn btn-sm btn-outline-primary me-1" title="Editar">
+                                <a asp-action="Edit" asp-route-id="@u.Id" class="btn btn-sm btn-outline-primary me-1" title="Editar">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <a asp-action="Delete" asp-route-id="@u.Id"
-                                   class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                <a asp-action="Delete" asp-route-id="@u.Id" class="btn btn-sm btn-outline-danger" title="Eliminar">
                                     <i class="bi bi-trash"></i>
                                 </a>
                             </td>

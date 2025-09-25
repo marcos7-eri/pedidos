@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pedidos1.Data;
 using Pedidos1.Models;
@@ -7,6 +8,7 @@ using Pedidos1.ViewModels;
 
 namespace Pedidos1.Controllers
 {
+    [Authorize(Roles = "admin")]
     public class UsersController : Controller
     {
         private readonly ApplicationDbContext _db;
@@ -52,8 +54,8 @@ namespace Pedidos1.Controllers
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
 
-            TempData["msg"] = "Usuario registrado. Ahora puedes iniciar sesión.";
-            return RedirectToAction("Login", "Account");
+            TempData["msg"] = "Usuario creado.";
+            return RedirectToAction(nameof(Index));
         }
 
         // DETAILS
@@ -71,13 +73,7 @@ namespace Pedidos1.Controllers
             var u = await _db.Users.FindAsync(id);
             if (u == null) return NotFound();
 
-            var vm = new UserEditViewModel
-            {
-                Id = u.Id,
-                Name = u.Name,
-                Email = u.Email,
-                Role = u.Role
-            };
+            var vm = new UserEditViewModel { Id = u.Id, Name = u.Name, Email = u.Email, Role = u.Role };
             return View(vm);
         }
 
