@@ -10,9 +10,8 @@ namespace Pedidos1.ViewModels
         [Required, EmailAddress, StringLength(120)]
         public string Email { get; set; } = default!;
 
-        // No se guarda, solo para hashear
         [Required, DataType(DataType.Password)]
-        [StringLength(100, MinimumLength = 6, ErrorMessage = "La contraseña debe tener al menos {2} caracteres.")]
+        [StringLength(100, MinimumLength = 6)]
         public string Password { get; set; } = default!;
 
         [Required, DataType(DataType.Password)]

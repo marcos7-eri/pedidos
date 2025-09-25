@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Pedidos1.Data;
 using Pedidos1.Models;
 using Pedidos1.ViewModels;
-using System.Text.RegularExpressions;
 
 namespace Pedidos1.Controllers
 {
@@ -19,34 +18,22 @@ namespace Pedidos1.Controllers
             _hasher = hasher;
         }
 
-        // GET: /Users
+        // LISTA
         public async Task<IActionResult> Index()
         {
-            var list = await _db.Users.AsNoTracking()
-                                      .OrderBy(u => u.Name)
-                                      .ToListAsync();
+            var list = await _db.Users.AsNoTracking().OrderBy(u => u.Name).ToListAsync();
             return View(list);
         }
 
-        // GET: /Users/Create
+        // CREATE
+        [HttpGet]
         public IActionResult Create() => View(new UserCreateViewModel());
 
-        // POST: /Users/Create
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(UserCreateViewModel vm)
         {
-            // Validación de modelo (Name, Email, Password, Confirm, Role)
-            if (!ModelState.IsValid)
-                return View(vm);
+            if (!ModelState.IsValid) return View(vm);
 
-            // Reglas de contraseña (ajústalas si quieres)
-            if (!IsStrongPassword(vm.Password, out var pwdError))
-            {
-                ModelState.AddModelError(nameof(vm.Password), pwdError);
-                return View(vm);
-            }
-
-            // Email único
             var exists = await _db.Users.AnyAsync(u => u.Email == vm.Email);
             if (exists)
             {
@@ -54,7 +41,6 @@ namespace Pedidos1.Controllers
                 return View(vm);
             }
 
-            // Mapear a entidad User y hashear
             var user = new User
             {
                 Name = vm.Name.Trim(),
@@ -63,33 +49,85 @@ namespace Pedidos1.Controllers
             };
             user.PasswordHash = _hasher.HashPassword(user, vm.Password);
 
-            _db.Add(user);
+            _db.Users.Add(user);
             await _db.SaveChangesAsync();
 
             TempData["msg"] = "Usuario registrado. Ahora puedes iniciar sesión.";
             return RedirectToAction("Login", "Account");
         }
 
-        // Reglas simples de contraseña (mínimo 6, letra y número). Ajusta si quieres.
-        private static bool IsStrongPassword(string pwd, out string error)
+        // DETAILS
+        public async Task<IActionResult> Details(int id)
         {
-            error = "";
-            if (pwd.Length < 6)
+            var u = await _db.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+            if (u == null) return NotFound();
+            return View(u);
+        }
+
+        // EDIT
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var u = await _db.Users.FindAsync(id);
+            if (u == null) return NotFound();
+
+            var vm = new UserEditViewModel
             {
-                error = "La contraseña debe tener al menos 6 caracteres.";
-                return false;
-            }
-            if (!Regex.IsMatch(pwd, "[A-Za-z]"))
+                Id = u.Id,
+                Name = u.Name,
+                Email = u.Email,
+                Role = u.Role
+            };
+            return View(vm);
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, UserEditViewModel vm)
+        {
+            if (!ModelState.IsValid) return View(vm);
+
+            var u = await _db.Users.FindAsync(id);
+            if (u == null) return NotFound();
+
+            var emailTaken = await _db.Users.AnyAsync(x => x.Email == vm.Email && x.Id != id);
+            if (emailTaken)
             {
-                error = "La contraseña debe incluir al menos una letra.";
-                return false;
+                ModelState.AddModelError(nameof(vm.Email), "El email ya está en uso.");
+                return View(vm);
             }
-            if (!Regex.IsMatch(pwd, "[0-9]"))
+
+            u.Name = vm.Name.Trim();
+            u.Email = vm.Email.Trim();
+            u.Role = vm.Role;
+
+            if (!string.IsNullOrWhiteSpace(vm.NewPassword))
+                u.PasswordHash = _hasher.HashPassword(u, vm.NewPassword);
+
+            await _db.SaveChangesAsync();
+            TempData["msg"] = "Usuario actualizado.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // DELETE
+        [HttpGet]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var u = await _db.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+            if (u == null) return NotFound();
+            return View(u);
+        }
+
+        [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var u = await _db.Users.FindAsync(id);
+            if (u != null)
             {
-                error = "La contraseña debe incluir al menos un número.";
-                return false;
+                _db.Users.Remove(u);
+                await _db.SaveChangesAsync();
+                TempData["msg"] = "Usuario eliminado.";
             }
-            return true;
+            return RedirectToAction(nameof(Index));
         }
     }
 }

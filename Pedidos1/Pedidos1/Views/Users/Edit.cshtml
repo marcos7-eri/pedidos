@@ -1,44 +1,53 @@
-﻿@model Pedidos1.Models.User
+﻿@model Pedidos1.ViewModels.UserEditViewModel
 @{
-    ViewData["Title"] = "Editar Usuario";
+    ViewData["Title"] = "Editar usuario";
 }
-<h2>Editar Usuario</h2>
+<div class="d-flex align-items-center mb-3">
+    <h2 class="me-auto mb-0">Editar usuario</h2>
+    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+</div>
 
-<form asp-action="Edit" method="post">
-    @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="Id" />
+<div class="card">
+    <div class="card-body">
+        <form asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
 
-    <div class="mb-3">
-        <label asp-for="Name" class="form-label"></label>
-        <input asp-for="Name" class="form-control" />
-        <span asp-validation-for="Name" class="text-danger"></span>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Role" class="form-label"></label>
+                    <select asp-for="Role" class="form-select">
+                        <option value="cliente">cliente</option>
+                        <option value="empleado">empleado</option>
+                        <option value="admin">admin</option>
+                    </select>
+                    <span asp-validation-for="Role" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="NewPassword" class="form-label"></label>
+                    <input asp-for="NewPassword" class="form-control" placeholder="Dejar vacío para mantener" />
+                    <span asp-validation-for="NewPassword" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+                <button class="btn btn-primary">Guardar</button>
+                <a asp-action="Index" class="btn btn-light">Cancelar</a>
+            </div>
+        </form>
     </div>
-
-    <div class="mb-3">
-        <label asp-for="Email" class="form-label"></label>
-        <input asp-for="Email" class="form-control" />
-        <span asp-validation-for="Email" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Nueva contraseña (opcional)</label>
-        <input name="newPassword" type="password" class="form-control" />
-        <small class="text-muted">Déjala vacía para mantener la actual.</small>
-    </div>
-
-    <div class="mb-3">
-        <label asp-for="Role" class="form-label"></label>
-        <select asp-for="Role" class="form-select">
-            <option value="cliente" selected="@(Model.Role == "cliente")">cliente</option>
-            <option value="empleado" selected="@(Model.Role == "empleado")">empleado</option>
-            <option value="admin" selected="@(Model.Role == "admin")">admin</option>
-        </select>
-        <span asp-validation-for="Role" class="text-danger"></span>
-    </div>
-
-    <button class="btn btn-primary">Guardar</button>
-    <a asp-action="Index" class="btn btn-secondary ms-2">Volver</a>
-</form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

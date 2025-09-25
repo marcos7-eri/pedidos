@@ -14,7 +14,7 @@ namespace Pedidos1.Controllers
             _db = db;
         }
 
-        // GET: /Products
+        // LISTA
         public async Task<IActionResult> Index(string? searchString, string? categoryFilter, decimal? minPrice, decimal? maxPrice)
         {
             var q = _db.Products.AsQueryable();
@@ -33,18 +33,71 @@ namespace Pedidos1.Controllers
             return View(items);
         }
 
-        // GET: /Products/Create
+        // CREATE
         public IActionResult Create() => View(new Product());
 
-        // POST: /Products/Create
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Product product)
         {
             if (!ModelState.IsValid) return View(product);
-
             _db.Add(product);
             await _db.SaveChangesAsync();
             TempData["msg"] = "Producto creado.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // DETAILS
+        public async Task<IActionResult> Details(int id)
+        {
+            var p = await _db.Products.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+            if (p == null) return NotFound();
+            return View(p);
+        }
+
+        // EDIT
+        public async Task<IActionResult> Edit(int id)
+        {
+            var p = await _db.Products.FindAsync(id);
+            if (p == null) return NotFound();
+            return View(p);
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, Product input)
+        {
+            if (!ModelState.IsValid) return View(input);
+            var p = await _db.Products.FindAsync(id);
+            if (p == null) return NotFound();
+
+            p.Name = input.Name;
+            p.Description = input.Description;
+            p.Price = input.Price;
+            p.Stock = input.Stock;
+            p.Category = input.Category;
+
+            await _db.SaveChangesAsync();
+            TempData["msg"] = "Producto actualizado.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // DELETE
+        public async Task<IActionResult> Delete(int id)
+        {
+            var p = await _db.Products.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+            if (p == null) return NotFound();
+            return View(p);
+        }
+
+        [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var p = await _db.Products.FindAsync(id);
+            if (p != null)
+            {
+                _db.Products.Remove(p);
+                await _db.SaveChangesAsync();
+                TempData["msg"] = "Producto eliminado.";
+            }
             return RedirectToAction(nameof(Index));
         }
     }
