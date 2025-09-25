@@ -3,33 +3,55 @@
     ViewData["Title"] = "Usuarios";
 }
 
-<h2 class="mb-3">Usuarios</h2>
+<div class="d-flex align-items-center mb-3">
+    <h2 class="me-auto mb-0">Usuarios</h2>
+    <a class="btn btn-primary" asp-action="Create">
+        <i class="bi bi-person-plus me-1"></i> Nuevo
+    </a>
+</div>
 
-<a class="btn btn-primary mb-2" asp-action="Create">Nuevo</a>
-
-<table class="table table-striped align-middle">
-    <thead>
-        <tr>
-            <th>Nombre</th>
-            <th>Email</th>
-            <th>Rol</th>
-        </tr>
-    </thead>
-    <tbody>
-        @if (Model is null || !Model.Any())
-        {
-            <tr><td colspan="3" class="text-center text-muted">Sin usuarios</td></tr>
-        }
-        else
-        {
-            foreach (var u in Model)
-            {
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
                 <tr>
-                    <td>@u.Name</td>
-                    <td>@u.Email</td>
-                    <td>@u.Role</td>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th style="width:160px;" class="text-center">Acciones</th>
                 </tr>
-            }
-        }
-    </tbody>
-</table>
+            </thead>
+            <tbody>
+                @if (Model is null || !Model.Any())
+                {
+                    <tr><td colspan="4" class="text-center text-muted py-4">Sin usuarios</td></tr>
+                }
+                else
+                {
+                    foreach (var u in Model)
+                    {
+                        <tr>
+                            <td>@u.Name</td>
+                            <td>@u.Email</td>
+                            <td><span class="badge bg-secondary">@u.Role</span></td>
+                            <td class="text-center">
+                                <a asp-action="Details" asp-route-id="@u.Id"
+                                   class="btn btn-sm btn-outline-info me-1" title="Ver">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a asp-action="Edit" asp-route-id="@u.Id"
+                                   class="btn btn-sm btn-outline-primary me-1" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@u.Id"
+                                   class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

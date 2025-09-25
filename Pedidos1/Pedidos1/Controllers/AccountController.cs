@@ -19,7 +19,7 @@ namespace Pedidos1.Controllers
             return View(new LoginViewModel());
         }
 
-        [ValidateAntiForgeryToken, HttpPost]
+        [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel vm, string? returnUrl = null)
         {
             if (!ModelState.IsValid) return View(vm);
@@ -31,8 +31,8 @@ namespace Pedidos1.Controllers
                 return View(vm);
             }
 
-            var verify = hasher.VerifyHashedPassword(user, user.PasswordHash, vm.Password);
-            if (verify == PasswordVerificationResult.Failed)
+            var result = hasher.VerifyHashedPassword(user, user.PasswordHash, vm.Password);
+            if (result == PasswordVerificationResult.Failed)
             {
                 ModelState.AddModelError("", "Credenciales inválidas");
                 return View(vm);
@@ -47,9 +47,11 @@ namespace Pedidos1.Controllers
             };
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity),
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(identity),
                 new AuthenticationProperties { IsPersistent = vm.RememberMe });
 
+            TempData["msg"] = "Sesión iniciada.";
             if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
 
@@ -60,6 +62,7 @@ namespace Pedidos1.Controllers
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync();
+            TempData["msg"] = "Sesión cerrada.";
             return RedirectToAction("Login");
         }
 
