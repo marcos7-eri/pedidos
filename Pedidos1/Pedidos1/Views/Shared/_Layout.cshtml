@@ -11,10 +11,7 @@
         <div class="navbar-nav">
             <a class="nav-link" asp-controller="Products" asp-action="Index">Productos</a>
             <a class="nav-link" asp-controller="Orders" asp-action="Index">Pedidos</a>
-            @if (User.IsInRole("admin"))
-            {
-                <a class="nav-link" asp-controller="Users" asp-action="Index">Usuarios</a>
-            }
+            <a class="nav-link" asp-controller="Users" asp-action="Index">Usuarios</a> <!-- SIEMPRE visible -->
         </div>
         <div class="ms-auto navbar-nav">
             @if (User.Identity?.IsAuthenticated ?? false)

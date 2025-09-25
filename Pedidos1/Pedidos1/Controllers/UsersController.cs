@@ -1,102 +1,53 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pedidos1.Data;
 using Pedidos1.Models;
 
 namespace Pedidos1.Controllers
 {
-    [Authorize(Roles = "admin")]
-    public class UsersController(ApplicationDbContext db, IPasswordHasher<User> hasher) : Controller
+    public class UsersController : Controller
     {
-        public async Task<IActionResult> Index() => View(await db.Users.AsNoTracking().ToListAsync());
+        private readonly ApplicationDbContext _db;
+        private readonly IPasswordHasher<User> _hasher;
 
-        public IActionResult Create() => View(new User());
+        public UsersController(ApplicationDbContext db, IPasswordHasher<User> hasher)
+        {
+            _db = db;
+            _hasher = hasher;
+        }
 
+        // LISTADO DE USUARIOS
+        public async Task<IActionResult> Index()
+        {
+            var list = await _db.Users.AsNoTracking().OrderBy(u => u.Name).ToListAsync();
+            return View(list);
+        }
+
+        // GET: /Users/Create
+        public IActionResult Create() => View(new User { Role = "cliente" });
+
+        // POST: /Users/Create
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(User user, string password)
         {
-            try
+            if (string.IsNullOrWhiteSpace(password))
+                ModelState.AddModelError("", "La contraseña es obligatoria.");
+
+            if (!ModelState.IsValid) return View(user);
+
+            var exists = await _db.Users.AnyAsync(u => u.Email == user.Email);
+            if (exists)
             {
-                if (!ModelState.IsValid) return View(user);
-                if (await db.Users.AnyAsync(u => u.Email == user.Email))
-                {
-                    ModelState.AddModelError(nameof(User), "El email ya existe.");
-                    return View(user);
-                }
-                user.PasswordHash = hasher.HashPassword(user, password);
-                db.Add(user);
-                await db.SaveChangesAsync();
-                TempData["msg"] = "Usuario creado.";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", $"Error: {ex.Message}");
+                ModelState.AddModelError(nameof(User), "El email ya está registrado.");
                 return View(user);
             }
-        }
 
-        public async Task<IActionResult> Edit(int id)
-        {
-            var user = await db.Users.FindAsync(id);
-            if (user == null) return NotFound();
-            return View(user);
-        }
+            user.PasswordHash = _hasher.HashPassword(user, password);
+            _db.Add(user);
+            await _db.SaveChangesAsync();
 
-        [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, User input, string? newPassword)
-        {
-            var user = await db.Users.FindAsync(id);
-            if (user == null) return NotFound();
-
-            try
-            {
-                if (!ModelState.IsValid) return View(input);
-
-                user.Name = input.Name;
-                user.Email = input.Email;
-                user.Role = input.Role;
-
-                if (!string.IsNullOrWhiteSpace(newPassword))
-                    user.PasswordHash = hasher.HashPassword(user, newPassword);
-
-                await db.SaveChangesAsync();
-                TempData["msg"] = "Usuario actualizado.";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", $"Error: {ex.Message}");
-                return View(input);
-            }
-        }
-
-        public async Task<IActionResult> Details(int id)
-        {
-            var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
-            if (user == null) return NotFound();
-            return View(user);
-        }
-
-        public async Task<IActionResult> Delete(int id)
-        {
-            var user = await db.Users.FindAsync(id);
-            if (user == null) return NotFound();
-            return View(user);
-        }
-
-        [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var user = await db.Users.FindAsync(id);
-            if (user != null)
-            {
-                db.Users.Remove(user);
-                await db.SaveChangesAsync();
-                TempData["msg"] = "Usuario eliminado.";
-            }
+            TempData["msg"] = "Usuario creado.";
             return RedirectToAction(nameof(Index));
         }
     }
